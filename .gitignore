@@ -1,0 +1,6 @@
+venv/
+mlruns/
+logs/
+Project_1.egg-info/
+configg.yaml
+
