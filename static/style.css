@@ -1,0 +1,143 @@
+:root {
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --text: #17212b;
+  --muted: #5a6b7b;
+  --border: #d6deea;
+  --primary: #1f4f82;
+  --primary-hover: #173f6a;
+  --success-bg: #edf8f2;
+  --success-text: #1f7a4d;
+  --error-bg: #fff1f1;
+  --error-text: #9b2c2c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #eef3fb 0%, var(--bg) 40%, #f8fafc 100%);
+  color: var(--text);
+  font-family: "Nunito Sans", "Segoe UI", Tahoma, sans-serif;
+}
+
+.page {
+  max-width: 980px;
+  margin: 2rem auto;
+  padding: 0 1rem 2rem;
+}
+
+.hero {
+  margin-bottom: 1rem;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 2.6vw, 2.15rem);
+}
+
+.subtitle {
+  margin: 0.4rem 0 0;
+  color: var(--muted);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.1rem;
+}
+
+.section-title h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.section-title p {
+  margin: 0.35rem 0 1rem;
+  color: var(--muted);
+}
+
+.fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem 1rem;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+input,
+select {
+  width: 100%;
+  height: 42px;
+  border: 1px solid #c7d2e1;
+  border-radius: 10px;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.95rem;
+  background: #fff;
+  color: var(--text);
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: #5b8fc8;
+  box-shadow: 0 0 0 3px rgba(91, 143, 200, 0.15);
+}
+
+small {
+  display: block;
+  margin-top: 0.28rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.predict-btn {
+  margin-top: 1rem;
+  width: 100%;
+  height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.96rem;
+  cursor: pointer;
+}
+
+.predict-btn:hover {
+  background: var(--primary-hover);
+}
+
+.alert {
+  margin-top: 1rem;
+  border-radius: 10px;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid transparent;
+}
+
+.alert-success {
+  background: var(--success-bg);
+  color: var(--success-text);
+  border-color: #cfe9da;
+}
+
+.alert-error {
+  background: var(--error-bg);
+  color: var(--error-text);
+  border-color: #f2cfcf;
+}
+
+@media (max-width: 840px) {
+  .fields-grid {
+    grid-template-columns: 1fr;
+  }
+}

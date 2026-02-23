@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hotel Booking Status Predictor</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <h1>Hotel Booking Status Predictor</h1>
+      <p class="subtitle">Simple form, cleaner inputs, faster prediction.</p>
+    </header>
+
+    {% if load_error %}
+      <div class="alert alert-error">
+        Artifacts not loaded: {{ load_error }}
+      </div>
+    {% endif %}
+
+    <form method="POST" class="card">
+      <div class="section-title">
+        <h2>Booking Details</h2>
+        <p>All fields are required. Options come from your original training data.</p>
+      </div>
+
+      <div class="fields-grid">
+        {% for col in num_cols %}
+          <div class="field">
+            <label for="{{ col }}">{{ field_labels.get(col, col) }}</label>
+
+            {% if col in binary_cols %}
+              <select id="{{ col }}" name="{{ col }}" required>
+                <option value="" disabled {% if not request.form.get(col) %}selected{% endif %}>Select</option>
+                <option value="0" {% if request.form.get(col) == '0' %}selected{% endif %}>No</option>
+                <option value="1" {% if request.form.get(col) == '1' %}selected{% endif %}>Yes</option>
+              </select>
+            {% elif col == 'arrival_month' %}
+              <select id="{{ col }}" name="{{ col }}" required>
+                <option value="" disabled {% if not request.form.get(col) %}selected{% endif %}>Select month</option>
+                {% for month in month_options %}
+                  <option value="{{ month.value }}" {% if request.form.get(col) == month.value|string %}selected{% endif %}>{{ month.label }}</option>
+                {% endfor %}
+              </select>
+            {% elif col == 'arrival_year' and year_options %}
+              <select id="{{ col }}" name="{{ col }}" required>
+                <option value="" disabled {% if not request.form.get(col) %}selected{% endif %}>Select year</option>
+                {% for year in year_options %}
+                  <option value="{{ year }}" {% if request.form.get(col) == year|string %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+              </select>
+            {% else %}
+              <input
+                type="number"
+                id="{{ col }}"
+                name="{{ col }}"
+                value="{{ request.form.get(col, '') }}"
+                min="{{ num_stats[col].min if num_stats.get(col) and num_stats[col].min is not none else '' }}"
+                max="{{ num_stats[col].max if num_stats.get(col) and num_stats[col].max is not none else '' }}"
+                step="{{ num_stats[col].step if num_stats.get(col) else 'any' }}"
+                placeholder="{% if num_stats.get(col) and num_stats[col].mean is not none %}e.g. {{ num_stats[col].mean }}{% endif %}"
+                required
+              />
+            {% endif %}
+
+            {% if field_helpers.get(col) %}
+              <small>{{ field_helpers.get(col) }}</small>
+            {% elif num_stats.get(col) and num_stats[col].min is not none and num_stats[col].max is not none %}
+              <small>Range: {{ num_stats[col].min }} to {{ num_stats[col].max }}</small>
+            {% endif %}
+          </div>
+        {% endfor %}
+
+        {% for col in cat_cols %}
+          <div class="field">
+            <label for="{{ col }}">{{ field_labels.get(col, col) }}</label>
+            <select id="{{ col }}" name="{{ col }}" required>
+              <option value="" disabled {% if not request.form.get(col) %}selected{% endif %}>Select {{ field_labels.get(col, col) }}</option>
+              {% for option in cat_options.get(col, []) %}
+                <option value="{{ option }}" {% if request.form.get(col) == option %}selected{% endif %}>{{ option }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        {% endfor %}
+      </div>
+
+      <button type="submit" class="predict-btn">Predict</button>
+    </form>
+
+    {% if prediction %}
+      <div class="alert alert-success">
+        <strong>Prediction:</strong> {{ prediction }}
+        {% if confidence is not none %}
+          <br />
+          <strong>Confidence:</strong> {{ confidence }}%
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if error %}
+      <div class="alert alert-error">
+        <strong>Error:</strong> {{ error }}
+      </div>
+    {% endif %}
+  </main>
+</body>
+</html>

@@ -6,3 +6,4 @@ azure-identity
 pyyaml
 lightgbm
 mlflow
+Flask
