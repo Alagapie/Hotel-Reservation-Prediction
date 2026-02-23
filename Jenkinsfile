@@ -33,28 +33,7 @@ pipeline {
             }
         }
 
-        stage('Building and Pushing Docker Image to ACR') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'azure-creds',
-                                                 usernameVariable: 'AZURE_CLIENT_ID',
-                                                 passwordVariable: 'AZURE_CLIENT_SECRET')]) {
-                    script {
-                        echo 'Building and Pushing Docker Image to ACR.............'
-                        sh '''
-                        az login --service-principal \
-                          -u $AZURE_CLIENT_ID \
-                          -p $AZURE_CLIENT_SECRET \
-                          --tenant <tenant-id>
-
-                        az acr login --name myregistry
-
-                        docker build -t ${AZURE_REGISTRY}/${IMAGE_NAME} .
-                        docker push ${AZURE_REGISTRY}/${IMAGE_NAME}
-                        '''
-                    }
-                }
-            }
-        }
+        stage('Build & Push Docker Image to ACR') { steps { withCredentials([ usernamePassword(credentialsId: 'azure-creds', usernameVariable: 'AZURE_CLIENT_ID', passwordVariable: 'AZURE_CLIENT_SECRET'), string(credentialsId: 'azure-tenant', variable: 'AZURE_TENANT') ]) { sh ''' az login --service-principal \ -u "$AZURE_CLIENT_ID" \ -p "$AZURE_CLIENT_SECRET" \ --tenant "$AZURE_TENANT" az acr login --name myregistry docker build -t myregistry.azurecr.io/ml-project:latest . docker push myregistry.azurecr.io/ml-project:latest ''' } } }
 
         stage('Deploy to Azure Web App for Containers') {
             steps {
