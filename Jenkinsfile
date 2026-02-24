@@ -2,72 +2,71 @@ pipeline {
     agent any
 
     environment {
-        VENV_DIR = 'venv'
-        AZURE_REGISTRY = "myregistry.azurecr.io"
-        IMAGE_NAME = "ml-project:latest"
-        RESOURCE_GROUP = "myResourceGroup"
-        APP_NAME = "mlprojectapp"
+        IMAGE_NAME = "hotelreservationapp"                 // Docker image name
+        ACR_LOGIN_SERVER = "hotelreservation.azurecr.io"  // Your ACR login server
+        ACR_CREDENTIALS_ID = "acr-admin-credentials"     // Jenkins credential ID for ACR admin
+        RESOURCE_GROUP = "project-1"
+        WEBAPP_NAME = "hotelreservationapp"              // Your Web App name
     }
 
     stages {
-        stage('Cloning Github repo to Jenkins') {
+
+        stage('Clone Repo') {
             steps {
-                script {
-                    echo 'Cloning Github repo to Jenkins............'
-                    checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'github-token', url: 'https://github.com/Alagapie/Hotel-Reservation-Prediction.git']])
+                echo 'Cloning GitHub repo'
+                checkout scmGit(branches: [[name: '*/main']], 
+                    extensions: [], 
+                    userRemoteConfigs: [[credentialsId: 'github-token', url: 'https://github.com/Alagapie/Hotel-Reservation-Prediction.git']]
+                )
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo 'Building Docker image'
+                sh """
+                docker build -t ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:latest .
+                """
+            }
+        }
+
+        stage('Login to ACR') {
+            steps {
+                echo 'Logging into Azure Container Registry'
+                withCredentials([usernamePassword(credentialsId: "${ACR_CREDENTIALS_ID}", 
+                                                 usernameVariable: 'ACR_USERNAME', 
+                                                 passwordVariable: 'ACR_PASSWORD')]) {
+                    sh """
+                    echo $ACR_PASSWORD | docker login ${ACR_LOGIN_SERVER} -u $ACR_USERNAME --password-stdin
+                    """
                 }
             }
         }
 
-        stage('Setting up Virtual Environment and Installing dependencies') {
+        stage('Push Image to ACR') {
             steps {
-                script {
-                    echo 'Setting up Virtual Environment............'
-                    sh '''
-                    python -m venv ${VENV_DIR}
-                    . ${VENV_DIR}/bin/activate
-                    pip install --upgrade pip
-                    pip install -e .
-                    '''
-                }
+                echo 'Pushing Docker image to Azure Container Registry'
+                sh """
+                docker push ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:latest
+                """
             }
         }
 
-        stage('Build & Push Docker Image to ACR') {
-         steps {
-         withCredentials([
-            usernamePassword(credentialsId: 'azure-creds',
-                             usernameVariable: 'AZURE_CLIENT_ID',
-                             passwordVariable: 'AZURE_CLIENT_SECRET'),
-            string(credentialsId: 'azure-tenant', variable: 'AZURE_TENANT')
-        ]) {
-            sh '''
-            az login --service-principal \
-              -u "$AZURE_CLIENT_ID" \
-              -p "$AZURE_CLIENT_SECRET" \
-              --tenant "$AZURE_TENANT"
-
-            az acr login --name myregistry
-
-            docker build -t myregistry.azurecr.io/ml-project:latest .
-            docker push myregistry.azurecr.io/ml-project:latest
-            '''
-        }
-    }
-}
-
-
-        stage('Deploy to Azure Web App for Containers') {
+        stage('Deploy to Azure Web App') {
             steps {
-                script {
-                    echo 'Deploying to Azure Web App.............'
-                    sh '''
-                    az webapp create \
-                      --resource-group ${RESOURCE_GROUP} \
-                      --plan myAppServicePlan \
-                      --name ${APP_NAME} \
-                      --deployment-container-image-name ${AZURE_REGISTRY}/${IMAGE_NAME}
-                    '''
+                echo 'Deploying Docker image to Azure Web App'
+                withCredentials([usernamePassword(credentialsId: "${ACR_CREDENTIALS_ID}", 
+                                                 usernameVariable: 'ACR_USERNAME', 
+                                                 passwordVariable: 'ACR_PASSWORD')]) {
+                    sh """
+                    az webapp config container set \
+                        --name ${WEBAPP_NAME} \
+                        --resource-group ${RESOURCE_GROUP} \
+                        --docker-custom-image-name ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:latest \
+                        --docker-registry-server-url https://${ACR_LOGIN_SERVER} \
+                        --docker-registry-server-user $ACR_USERNAME \
+                        --docker-registry-server-password $ACR_PASSWORD
+                    """
                 }
             }
         }
