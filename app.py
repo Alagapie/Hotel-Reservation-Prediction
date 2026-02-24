@@ -194,5 +194,5 @@ def home():
 if __name__ == "__main__":
     import os
 
-    port = int(os.environ.get("PORT", 5000))  # Azure provides PORT
+    port = int(os.environ.get("PORT", 80))  # Azure provides PORT
     app.run(host="0.0.0.0", port=port)
