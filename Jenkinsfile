@@ -177,7 +177,7 @@ pipeline {
 
     post {
         success {
-            echo "Deployment successful! App URL: https://${WEBAPP_NAME}-a6bnhzbyf5amb0cu.francecentral-01.azurewebsites.net"
+            echo "Deployment successful! App URL: https://${WEBAPP_NAME}.azurewebsites.net"
         }
         failure {
             echo "Deployment failed. Check the Jenkins console and Azure Log Stream."

@@ -28,4 +28,4 @@ RUN pip install --no-cache-dir -e .
 EXPOSE 80
 
 # Run your app
-CMD ["python", "application.py"]
+CMD ["python", "app.py"]
